@@ -18,6 +18,7 @@ import UserDashboard from './components/dashboard/Dashboard';
 import UsersList from './components/admin/UsersList';
 import ServicesList from './components/admin/ServicesList';
 import DeploymentsList from './components/admin/DeploymentsList';
+import DeploymentDetail from './components/admin/DeploymentDetail';
 import UserServicesList from './components/dashboard/ServicesList';
 import UserDeploymentsList from './components/dashboard/DeploymentsList';
 
@@ -27,35 +28,36 @@ import './App.css';
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Navbar />
-        <div className="container-fluid py-4">
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<Navigate to="/login" />} />
-            
-            {/* Protected Routes for all authenticated users */}
-            <Route element={<PrivateRoute />}>
-              <Route path="/dashboard" element={<UserDashboard />} />
-              <Route path="/services" element={<UserServicesList />} />
-              <Route path="/deployments" element={<UserDeploymentsList />} />
-            </Route>
-            
-            {/* Protected Routes for admin users only */}
-            <Route element={<AdminRoute />}>
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              <Route path="/admin/users" element={<UsersList />} />
-              <Route path="/admin/register" element={<Register />} />
-              <Route path="/admin/services" element={<ServicesList />} />
-              <Route path="/admin/deployments" element={<DeploymentsList />} />
-            </Route>
-          </Routes>
-        </div>
-        <Footer />
-      </Router>
-    </AuthProvider>
+      <AuthProvider>
+        <Router>
+          <Navbar />
+          <div className="container-fluid py-4">
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={<Navigate to="/login" />} />
+
+              {/* Protected Routes for all authenticated users */}
+              <Route element={<PrivateRoute />}>
+                <Route path="/dashboard" element={<UserDashboard />} />
+                <Route path="/services" element={<UserServicesList />} />
+                <Route path="/deployments" element={<UserDeploymentsList />} />
+              </Route>
+
+              {/* Protected Routes for admin users only */}
+              <Route element={<AdminRoute />}>
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/users" element={<UsersList />} />
+                <Route path="/admin/register" element={<Register />} />
+                <Route path="/admin/services" element={<ServicesList />} />
+                <Route path="/admin/deployments" element={<DeploymentsList />} />
+                <Route path="/admin/deployments/:id" element={<DeploymentDetail />} />
+              </Route>
+            </Routes>
+          </div>
+          <Footer />
+        </Router>
+      </AuthProvider>
   );
 }
 
