@@ -38,10 +38,28 @@ const Deployment = {
     }
   },
 
+  // Check if a deployment with the same service and version already exists
+  async checkVersionExists(serviceId, version) {
+    try {
+      const query = 'SELECT id FROM public.deployments WHERE service_id = $1 AND version = $2';
+      const result = await pool.query(query, [serviceId, version]);
+      return result.rows.length > 0;
+    } catch (error) {
+      console.error('Check version exists error:', error);
+      throw error;
+    }
+  },
+
   // Create new deployment
   async create(serviceId, version, changes, userId) {
     try {
-      // First get the service to include its application
+      // First check if a deployment with this service and version already exists
+      const versionExists = await this.checkVersionExists(serviceId, version);
+      if (versionExists) {
+        throw new Error('A deployment with this version already exists for this service');
+      }
+
+      // Get the service to include its application
       const serviceQuery = 'SELECT application FROM public.services WHERE id = $1';
       const serviceResult = await pool.query(serviceQuery, [serviceId]);
       const application = serviceResult.rows[0]?.application;

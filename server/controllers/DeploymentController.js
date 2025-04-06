@@ -27,7 +27,7 @@ const fileFilter = (req, file, cb) => {
   // Accept only specific file types
   const allowedFileTypes = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx'];
   const ext = path.extname(file.originalname).toLowerCase();
-  
+
   if (allowedFileTypes.includes(ext)) {
     cb(null, true);
   } else {
@@ -46,7 +46,7 @@ const upload = multer({
 const DeploymentController = {
   // Upload middleware
   uploadMiddleware: upload.single('file'),
-  
+
   // Create a new deployment with mandatory file upload
   async createDeploymentWithFile(req, res) {
     try {
@@ -56,32 +56,40 @@ const DeploymentController = {
       }
 
       const { serviceId, version, changes } = req.body;
-      
-      // Create deployment
-      const deployment = await Deployment.create(serviceId, version, changes, req.user.id);
-      
-      // Process the uploaded file
-      const fileName = req.file.originalname;
-      const filePath = req.file.path;
-      const fileType = path.extname(fileName).substring(1);
-      const fileSize = req.file.size;
 
-      // Create file record
-      const file = await DeploymentFile.create(
-        deployment.id,
-        fileName,
-        filePath,
-        fileType,
-        fileSize,
-        req.user.id
-      );
+      try {
+        // Create deployment
+        const deployment = await Deployment.create(serviceId, version, changes, req.user.id);
 
-      // Return both deployment and file information
-      res.status(201).json({ 
-        success: true, 
-        deployment,
-        file
-      });
+        // Process the uploaded file
+        const fileName = req.file.originalname;
+        const filePath = req.file.path;
+        const fileType = path.extname(fileName).substring(1);
+        const fileSize = req.file.size;
+
+        // Create file record
+        const file = await DeploymentFile.create(
+            deployment.id,
+            fileName,
+            filePath,
+            fileType,
+            fileSize,
+            req.user.id
+        );
+
+        // Return both deployment and file information
+        res.status(201).json({
+          success: true,
+          deployment,
+          file
+        });
+      } catch (error) {
+        // Check if this is a duplicate version error
+        if (error.message && error.message.includes('already exists for this service')) {
+          return res.status(409).json({ message: error.message });
+        }
+        throw error; // Re-throw other errors to be caught by the outer catch block
+      }
     } catch (error) {
       console.error('Create deployment with file error:', error);
       res.status(500).json({ message: 'Server error' });
@@ -91,10 +99,18 @@ const DeploymentController = {
   // Legacy create deployment method (kept for backward compatibility)
   async createDeployment(req, res) {
     const { serviceId, version, changes } = req.body;
-    
+
     try {
-      const deployment = await Deployment.create(serviceId, version, changes, req.user.id);
-      res.status(201).json({ success: true, deployment });
+      try {
+        const deployment = await Deployment.create(serviceId, version, changes, req.user.id);
+        res.status(201).json({ success: true, deployment });
+      } catch (error) {
+        // Check if this is a duplicate version error
+        if (error.message && error.message.includes('already exists for this service')) {
+          return res.status(409).json({ message: error.message });
+        }
+        throw error; // Re-throw other errors to be caught by the outer catch block
+      }
     } catch (error) {
       console.error('Create deployment error:', error);
       res.status(500).json({ message: 'Server error' });
@@ -105,18 +121,18 @@ const DeploymentController = {
   async getAllDeployments(req, res) {
     try {
       const deployments = await Deployment.findAll();
-      
+
       // Get files for each deployment
       const deploymentsWithFiles = await Promise.all(
-        deployments.map(async (deployment) => {
-          const files = await DeploymentFile.findByDeployment(deployment.id);
-          return {
-            ...deployment,
-            files: files
-          };
-        })
+          deployments.map(async (deployment) => {
+            const files = await DeploymentFile.findByDeployment(deployment.id);
+            return {
+              ...deployment,
+              files: files
+            };
+          })
       );
-      
+
       res.json({ success: true, deployments: deploymentsWithFiles });
     } catch (error) {
       console.error('Get all deployments error:', error);
@@ -131,12 +147,12 @@ const DeploymentController = {
       if (!deployment) {
         return res.status(404).json({ message: 'Deployment not found' });
       }
-      
+
       // Get associated files
       const files = await DeploymentFile.findByDeployment(req.params.id);
-      
-      res.json({ 
-        success: true, 
+
+      res.json({
+        success: true,
         deployment,
         files
       });
@@ -150,18 +166,18 @@ const DeploymentController = {
   async getDeploymentsByServiceId(req, res) {
     try {
       const deployments = await Deployment.findByService(req.params.serviceId);
-      
+
       // Get files for each deployment
       const deploymentsWithFiles = await Promise.all(
-        deployments.map(async (deployment) => {
-          const files = await DeploymentFile.findByDeployment(deployment.id);
-          return {
-            ...deployment,
-            files: files
-          };
-        })
+          deployments.map(async (deployment) => {
+            const files = await DeploymentFile.findByDeployment(deployment.id);
+            return {
+              ...deployment,
+              files: files
+            };
+          })
       );
-      
+
       res.json({ success: true, deployments: deploymentsWithFiles });
     } catch (error) {
       console.error('Get deployments by service ID error:', error);
@@ -183,12 +199,12 @@ const DeploymentController = {
       const fileSize = req.file.size;
 
       const file = await DeploymentFile.create(
-        deploymentId,
-        fileName,
-        filePath,
-        fileType,
-        fileSize,
-        req.user.id
+          deploymentId,
+          fileName,
+          filePath,
+          fileType,
+          fileSize,
+          req.user.id
       );
 
       res.status(201).json({ success: true, file });
