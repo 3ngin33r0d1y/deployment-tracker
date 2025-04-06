@@ -6,9 +6,9 @@ const Service = {
   async findById(id) {
     try {
       const query = `
-        SELECT s.*, u.email as creator_email 
+        SELECT s.*, u.email as creator_email
         FROM public.services s
-        LEFT JOIN public.users u ON s.created_by = u.id
+               LEFT JOIN public.users u ON s.created_by = u.id
         WHERE s.id = $1
       `;
       const result = await pool.query(query, [id]);
@@ -20,10 +20,10 @@ const Service = {
   },
 
   // Create new service
-  async create(name, description, userId) {
+  async create(name, description, application, userId) {
     try {
-      const query = 'INSERT INTO public.services (name, description, created_by) VALUES ($1, $2, $3) RETURNING *';
-      const values = [name, description, userId];
+      const query = 'INSERT INTO public.services (name, description, application, created_by) VALUES ($1, $2, $3, $4) RETURNING *';
+      const values = [name, description, application, userId];
       const result = await pool.query(query, values);
       return result.rows[0];
     } catch (error) {
@@ -36,9 +36,9 @@ const Service = {
   async findAll() {
     try {
       const query = `
-        SELECT s.*, u.email as creator_email 
+        SELECT s.*, u.email as creator_email
         FROM public.services s
-        LEFT JOIN public.users u ON s.created_by = u.id
+               LEFT JOIN public.users u ON s.created_by = u.id
         ORDER BY s.created_at DESC
       `;
       const result = await pool.query(query);

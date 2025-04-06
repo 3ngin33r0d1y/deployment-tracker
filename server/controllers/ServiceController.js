@@ -4,10 +4,10 @@ const Service = require('../models/Service');
 const ServiceController = {
   // Create a new service
   async createService(req, res) {
-    const { name, description } = req.body;
-    
+    const { name, description, application } = req.body;
+
     try {
-      const service = await Service.create(name, description, req.user.id);
+      const service = await Service.create(name, description, application, req.user.id);
       res.status(201).json({ success: true, service });
     } catch (error) {
       console.error('Create service error:', error);
@@ -18,7 +18,7 @@ const ServiceController = {
   // Get all services
   async getAllServices(req, res) {
     try {
-      const services = await Service.findAll(); // Changed from getAll to findAll
+      const services = await Service.findAll();
       res.json({ success: true, services });
     } catch (error) {
       console.error('Get all services error:', error);
@@ -43,7 +43,7 @@ const ServiceController = {
   // Update service
   async updateService(req, res) {
     const { name, description } = req.body;
-    
+
     try {
       const service = await Service.update(req.params.id, name, description);
       if (!service) {
