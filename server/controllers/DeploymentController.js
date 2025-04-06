@@ -55,11 +55,11 @@ const DeploymentController = {
         return res.status(400).json({ message: 'File upload is mandatory for deployment creation' });
       }
 
-      const { serviceId, version, changes } = req.body;
+      const { serviceId, version, changes, branchName } = req.body;
 
       try {
         // Create deployment
-        const deployment = await Deployment.create(serviceId, version, changes, req.user.id);
+        const deployment = await Deployment.create(serviceId, version, changes, req.user.id, branchName);
 
         // Process the uploaded file
         const fileName = req.file.originalname;
@@ -98,11 +98,11 @@ const DeploymentController = {
 
   // Legacy create deployment method (kept for backward compatibility)
   async createDeployment(req, res) {
-    const { serviceId, version, changes } = req.body;
+    const { serviceId, version, changes, branchName } = req.body;
 
     try {
       try {
-        const deployment = await Deployment.create(serviceId, version, changes, req.user.id);
+        const deployment = await Deployment.create(serviceId, version, changes, req.user.id, branchName);
         res.status(201).json({ success: true, deployment });
       } catch (error) {
         // Check if this is a duplicate version error

@@ -51,7 +51,7 @@ const Deployment = {
   },
 
   // Create new deployment
-  async create(serviceId, version, changes, userId) {
+  async create(serviceId, version, changes, userId, branchName) {
     try {
       // First check if a deployment with this service and version already exists
       const versionExists = await this.checkVersionExists(serviceId, version);
@@ -64,8 +64,8 @@ const Deployment = {
       const serviceResult = await pool.query(serviceQuery, [serviceId]);
       const application = serviceResult.rows[0]?.application;
 
-      const query = 'INSERT INTO public.deployments (service_id, version, changes, created_by) VALUES ($1, $2, $3, $4) RETURNING *';
-      const values = [serviceId, version, changes, userId];
+      const query = 'INSERT INTO public.deployments (service_id, version, changes, created_by, branch_name) VALUES ($1, $2, $3, $4, $5) RETURNING *';
+      const values = [serviceId, version, changes, userId, branchName || 'main'];
       const result = await pool.query(query, values);
 
       // Add the application to the returned deployment object
@@ -83,10 +83,10 @@ const Deployment = {
   async findAll() {
     try {
       const query = `
-        SELECT d.*, s.name as service_name, s.application, u.email as creator_email 
+        SELECT d.*, s.name as service_name, s.application, u.email as creator_email
         FROM public.deployments d
-        LEFT JOIN public.services s ON d.service_id = s.id
-        LEFT JOIN public.users u ON d.created_by = u.id
+               LEFT JOIN public.services s ON d.service_id = s.id
+               LEFT JOIN public.users u ON d.created_by = u.id
         ORDER BY d.created_at DESC
       `;
       const result = await pool.query(query);
@@ -101,10 +101,10 @@ const Deployment = {
   async findByService(serviceId) {
     try {
       const query = `
-        SELECT d.*, s.name as service_name, s.application, u.email as creator_email 
+        SELECT d.*, s.name as service_name, s.application, u.email as creator_email
         FROM public.deployments d
-        LEFT JOIN public.services s ON d.service_id = s.id
-        LEFT JOIN public.users u ON d.created_by = u.id
+               LEFT JOIN public.services s ON d.service_id = s.id
+               LEFT JOIN public.users u ON d.created_by = u.id
         WHERE d.service_id = $1
         ORDER BY d.created_at DESC
       `;

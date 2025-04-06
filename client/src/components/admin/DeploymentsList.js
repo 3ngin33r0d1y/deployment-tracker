@@ -25,7 +25,8 @@ const DeploymentsList = () => {
   const [newDeployment, setNewDeployment] = useState({
     serviceId: '',
     version: '',
-    changes: ''
+    changes: '',
+    branchName: 'main'
   });
   const [selectedFile, setSelectedFile] = useState(null);
 
@@ -119,6 +120,7 @@ const DeploymentsList = () => {
       formData.append('serviceId', newDeployment.serviceId);
       formData.append('version', newDeployment.version);
       formData.append('changes', newDeployment.changes);
+      formData.append('branchName', newDeployment.branchName);
       formData.append('file', selectedFile);
 
       // Set headers
@@ -143,7 +145,7 @@ const DeploymentsList = () => {
       setSuccess(`Deployment created successfully with documentation file`);
 
       // Reset form and close modal
-      setNewDeployment({ serviceId: '', version: '', changes: '' });
+      setNewDeployment({ serviceId: '', version: '', changes: '', branchName: 'main' });
       setSelectedFile(null);
       setShowAddModal(false);
 
@@ -328,6 +330,7 @@ const DeploymentsList = () => {
                     <th>Service</th>
                     <th>Application</th>
                     <th>Version</th>
+                    <th>Branch</th>
                     <th>Changes</th>
                     <th>Created By</th>
                     <th>Created At</th>
@@ -344,6 +347,9 @@ const DeploymentsList = () => {
                         </td>
                         <td>
                           <span className="badge bg-dark">{deployment.version}</span>
+                        </td>
+                        <td>
+                          <span className="badge bg-info">{deployment.branch_name || 'main'}</span>
                         </td>
                         <td>{deployment.changes}</td>
                         <td>{deployment.creator_email}</td>
@@ -419,6 +425,20 @@ const DeploymentsList = () => {
                     placeholder="e.g., 1.0.0"
                     required
                 />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Release Branch</Form.Label>
+                <Form.Control
+                    type="text"
+                    name="branchName"
+                    value={newDeployment.branchName}
+                    onChange={handleInputChange}
+                    placeholder="e.g., main, release/v1.0, feature/xyz"
+                    required
+                />
+                <Form.Text className="text-muted">
+                  The branch name this deployment was created from (defaults to 'main')
+                </Form.Text>
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label>Changes</Form.Label>
