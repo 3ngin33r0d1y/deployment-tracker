@@ -153,13 +153,6 @@ app.listen(PORT, () => {
 });
 EOL
 
-# Configure firewall if it's running
-echo "Configuring firewall..."
-if systemctl is-active --quiet firewalld; then
-    firewall-cmd --permanent --add-port=8443/tcp
-    firewall-cmd --reload
-    echo "Firewall configured to allow port 8443"
-fi
 
 # Create systemd service file
 echo "Creating systemd service..."
@@ -186,24 +179,6 @@ systemctl daemon-reload
 systemctl enable deployment-tracker
 systemctl start deployment-tracker
 
-# Configure Fabio (assuming it's already installed)
-echo "Configuring Fabio reverse proxy..."
-mkdir -p /etc/fabio
-cat > /etc/fabio/fabio.properties << EOL
-# Fabio configuration for Deployment Tracker
-
-proxy.addr = :8443;proto=https;rt=300s;wt=300s
-
-# TLS configuration
-proxy.cs = cs=deployment-tracker;type=file;cert=/etc/fabio/certs/cert.pem;key=/etc/fabio/certs/key.pem
-
-# Route configuration
-route add deployment-tracker / http://localhost:8443/ opts "host=your-domain.com"
-EOL
-
-# Restart Fabio
-echo "Restarting Fabio..."
-systemctl restart fabio
 
 echo ""
 echo "=== Installation Complete ==="
